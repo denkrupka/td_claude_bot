@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Twoja Decyzja — Калькулятор услуг</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --td-blue: #1B3A5C;
+            --td-blue-light: #2A5A8C;
+            --td-gold: #C8A855;
+            --td-gold-light: #E0C878;
+            --td-bg: #F4F6F9;
+            --td-card: #FFFFFF;
+            --td-text: #1B2B3D;
+            --td-text-secondary: #5A6B7D;
+            --td-border: #E2E8F0;
+            --td-accent: #1B3A5C;
+            --td-success: #22C55E;
+            --td-radius: 14px;
+            --td-shadow: 0 2px 12px rgba(27, 58, 92, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--td-bg);
+            color: var(--td-text);
+            min-height: 100vh;
+            padding-bottom: 100px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--td-blue) 0%, var(--td-blue-light) 100%);
+            padding: 20px 16px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(200, 168, 85, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header-logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 2px;
+        }
+
+        .header-logo span {
+            color: var(--td-gold);
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+
+        /* Language Selector */
+        .lang-bar {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 16px 0;
+            margin-top: -14px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .lang-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--td-card);
+            color: var(--td-text-secondary);
+            box-shadow: var(--td-shadow);
+        }
+
+        .lang-btn.active {
+            background: var(--td-blue);
+            color: #fff;
+        }
+
+        /* Type Selector */
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .type-card {
+            flex: 1;
+            padding: 16px 12px;
+            border-radius: var(--td-radius);
+            border: 2px solid var(--td-border);
+            background: var(--td-card);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: var(--td-shadow);
+        }
+
+        .type-card.active {
+            border-color: var(--td-gold);
+            background: linear-gradient(135deg, rgba(200, 168, 85, 0.08), rgba(200, 168, 85, 0.02));
+            box-shadow: 0 4px 20px rgba(200, 168, 85, 0.2);
+        }
+
+        .type-icon {
+            font-size: 32px;
+            margin-bottom: 6px;
+        }
+
+        .type-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--td-text);
+        }
+
+        .type-desc {
+            font-size: 11px;
+            color: var(--td-text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Sections */
+        .section {
+            margin: 8px 16px 0;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--td-blue);
+            padding: 12px 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: var(--td-gold);
+            border-radius: 2px;
+        }
+
+        .card {
+            background: var(--td-card);
+            border-radius: var(--td-radius);
+            box-shadow: var(--td-shadow);
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        /* Service Items */
+        .service-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--td-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.15s;
+        }
+
+        .service-item:last-child {
+            border-bottom: none;
+        }
+
+        .service-item:active {
+            background: rgba(27, 58, 92, 0.03);
+        }
+
+        .service-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--td-border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .service-check.checked {
+            background: var(--td-blue);
+            border-color: var(--td-blue);
+        }
+
+        .service-check.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .service-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .service-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--td-text);
+            line-height: 1.3;
+        }
+
+        .service-price-tag {
+            font-size: 12px;
+            color: var(--td-text-secondary);
+            margin-top: 2px;
+        }
+
+        .service-controls {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-shrink: 0;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1.5px solid var(--td-border);
+            background: var(--td-bg);
+            color: var(--td-text);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .qty-btn:active {
+            background: var(--td-blue);
+            color: #fff;
+            border-color: var(--td-blue);
+        }
+
+        .qty-value {
+            width: 36px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--td-text);
+        }
+
+        .service-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--td-gold);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* Select dropdown for invoice ranges */
+        .invoice-select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--td-border);
+            background: var(--td-bg);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: var(--td-text);
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%235A6B7D'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .invoice-select:focus {
+            outline: none;
+            border-color: var(--td-blue);
+        }
+
+        .select-wrapper {
+            padding: 14px 16px;
+        }
+
+        .select-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--td-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .select-price {
+            text-align: right;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--td-gold);
+            margin-top: 8px;
+        }
+
+        /* Bottom Summary */
+        .summary-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--td-card);
+            border-top: 1px solid var(--td-border);
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .summary-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            color: var(--td-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .summary-total {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--td-blue);
+            line-height: 1.1;
+        }
+
+        .summary-total span {
+            font-size: 16px;
+            color: var(--td-text-secondary);
+            font-weight: 500;
+        }
+
+        .summary-items {
+            font-size: 12px;
+            color: var(--td-text-secondary);
+        }
+
+        .btn-send {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--td-blue) 0%, var(--td-blue-light) 100%);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(27, 58, 92, 0.3);
+        }
+
+        .btn-send:active {
+            transform: scale(0.96);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Extra invoices input */
+        .extra-input-row {
+            display: none;
+            padding: 0 16px 14px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .extra-input-row.visible {
+            display: flex;
+        }
+
+        .extra-input-row label {
+            font-size: 13px;
+            color: var(--td-text-secondary);
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .extra-input {
+            width: 80px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1.5px solid var(--td-border);
+            background: var(--td-bg);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+
+        .extra-input:focus {
+            outline: none;
+            border-color: var(--td-blue);
+        }
+
+        /* Animate */
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Empty state */
+        .empty-hint {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--td-text-secondary);
+            font-size: 13px;
+        }
+
+        .empty-hint .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-logo">Twoja <span>Decyzja</span></div>
+    <div class="header-subtitle" id="headerSubtitle">Калькулятор бухгалтерских услуг</div>
+</div>
+
+<div class="lang-bar">
+    <button class="lang-btn" data-lang="pl" onclick="setLang('pl')">PL</button>
+    <button class="lang-btn active" data-lang="ru" onclick="setLang('ru')">RU</button>
+    <button class="lang-btn" data-lang="ua" onclick="setLang('ua')">UA</button>
+</div>
+
+<div class="type-selector">
+    <div class="type-card active" id="type-jdg" onclick="setType('jdg')">
+        <div class="type-icon">👤</div>
+        <div class="type-title">JDG</div>
+        <div class="type-desc" data-i18n="type_jdg_desc">ФОП / ИП</div>
+    </div>
+    <div class="type-card" id="type-sp" onclick="setType('sp')">
+        <div class="type-icon">🏢</div>
+        <div class="type-title">Sp. z o.o.</div>
+        <div class="type-desc" data-i18n="type_sp_desc">ООО</div>
+    </div>
+</div>
+
+<div id="calculator"></div>
+
+<div class="summary-bar">
+    <div class="summary-info">
+        <div class="summary-label" data-i18n="total_label">Итого</div>
+        <div class="summary-total" id="totalAmount">0 <span>PLN</span></div>
+        <div class="summary-items" id="itemsCount" data-i18n="no_services">Выберите услуги</div>
+    </div>
+    <button class="btn-send" id="btnSend" onclick="sendResult()" disabled>
+        <span data-i18n="btn_send">Отправить</span>
+    </button>
+</div>
+
+<script>
+// ===== TRANSLATIONS =====
+const i18n = {
+    ru: {
+        subtitle: 'Калькулятор бухгалтерских услуг',
+        type_jdg_desc: 'ФОП / ИП',
+        type_sp_desc: 'ООО',
+        total_label: 'Итого нетто',
+        no_services: 'Выберите услуги',
+        btn_send: 'Отправить',
+        items_selected: 'услуг выбрано',
+        invoices_label: 'Кол-во фактур / записей в месяц',
+        extra_invoices: 'Доп. фактуры сверх пакета:',
+        per_item: 'за шт.',
+        from: 'от',
+        individual: 'индивидуально',
+        plus_postage: '+ почтовые расходы',
+        plus_costs: '+ возмещение расходов',
+        sect_bookkeeping: 'Бухгалтерский учёт',
+        sect_vat: 'НДС и декларации',
+        sect_payroll: 'Зарплата и ZUS',
+        sect_hr: 'Кадровые услуги',
+        sect_foreign: 'Иностранные работники',
+        sect_extra: 'Дополнительные услуги',
+        opt_5: 'До 5 фактур',
+        opt_10: 'До 10 фактур',
+        opt_20: 'До 20 фактур',
+        opt_30: 'До 30 фактур',
+        opt_50: 'До 50 фактур',
+        opt_10r: 'До 10 записей',
+        opt_20r: 'До 20 записей',
+        opt_30r: 'До 30 записей',
+        opt_50r: 'До 50 записей',
+        sent_title: '📋 Расчёт стоимости услуг Twoja Decyzja',
+        sent_type_jdg: 'Тип: JDG (ФОП)',
+        sent_type_sp: 'Тип: Sp. z o.o. (ООО)',
+    },
+    pl: {
+        subtitle: 'Kalkulator usług księgowych',
+        type_jdg_desc: 'Jednoosobowa działalność',
+        type_sp_desc: 'Spółka z o.o.',
+        total_label: 'Razem netto',
+        no_services: 'Wybierz usługi',
+        btn_send: 'Wyślij',
+        items_selected: 'usług wybranych',
+        invoices_label: 'Liczba faktur / wpisów miesięcznie',
+        extra_invoices: 'Dodatkowe faktury ponad pakiet:',
+        per_item: 'za szt.',
+        from: 'od',
+        individual: 'indywidualnie',
+        plus_postage: '+ koszty pocztowe',
+        plus_costs: '+ zwrot kosztów',
+        sect_bookkeeping: 'Księgowość',
+        sect_vat: 'VAT i deklaracje',
+        sect_payroll: 'Wynagrodzenia i ZUS',
+        sect_hr: 'Usługi kadrowe',
+        sect_foreign: 'Pracownicy zagraniczni',
+        sect_extra: 'Usługi dodatkowe',
+        opt_5: 'Do 5 faktur',
+        opt_10: 'Do 10 faktur',
+        opt_20: 'Do 20 faktur',
+        opt_30: 'Do 30 faktur',
+        opt_50: 'Do 50 faktur',
+        opt_10r: 'Do 10 wpisów',
+        opt_20r: 'Do 20 wpisów',
+        opt_30r: 'Do 30 wpisów',
+        opt_50r: 'Do 50 wpisów',
+        sent_title: '📋 Kalkulacja kosztów usług Twoja Decyzja',
+        sent_type_jdg: 'Typ: JDG',
+        sent_type_sp: 'Typ: Sp. z o.o.',
+    },
+    ua: {
+        subtitle: 'Калькулятор бухгалтерських послуг',
+        type_jdg_desc: 'ФОП',
+        type_sp_desc: 'ТОВ',
+        total_label: 'Разом нетто',
+        no_services: 'Оберіть послуги',
+        btn_send: 'Надіслати',
+        items_selected: 'послуг обрано',
+        invoices_label: 'К-ть фактур / записів на місяць',
+        extra_invoices: 'Дод. фактури понад пакет:',
+        per_item: 'за шт.',
+        from: 'від',
+        individual: 'індивідуально',
+        plus_postage: '+ поштові витрати',
+        plus_costs: '+ відшкодування витрат',
+        sect_bookkeeping: 'Бухгалтерський облік',
+        sect_vat: 'ПДВ та декларації',
+        sect_payroll: 'Зарплата та ZUS',
+        sect_hr: 'Кадрові послуги',
+        sect_foreign: 'Іноземні працівники',
+        sect_extra: 'Додаткові послуги',
+        opt_5: 'До 5 фактур',
+        opt_10: 'До 10 фактур',
+        opt_20: 'До 20 фактур',
+        opt_30: 'До 30 фактур',
+        opt_50: 'До 50 фактур',
+        opt_10r: 'До 10 записів',
+        opt_20r: 'До 20 записів',
+        opt_30r: 'До 30 записів',
+        opt_50r: 'До 50 записів',
+        sent_title: '📋 Розрахунок вартості послуг Twoja Decyzja',
+        sent_type_jdg: 'Тип: JDG (ФОП)',
+        sent_type_sp: 'Тип: Sp. z o.o. (ТОВ)',
+    }
+};
+
+// ===== PRICE DATA =====
+const prices = {
+    jdg: {
+        packages: [
+            { key: 'opt_5', price: 250 },
+            { key: 'opt_10', price: 300 },
+            { key: 'opt_20', price: 450 },
+            { key: 'opt_30', price: 550 },
+            { key: 'opt_50', price: 750 },
+        ],
+        extraInvoice: 11,
+        sections: {
+            sect_vat: [
+                { id: 'vat_jpk', name: { ru: 'Декларация VAT + JPK', pl: 'Deklaracja VAT + JPK', ua: 'Декларація VAT + JPK' }, price: 100, qty: true },
+                { id: 'vat_ue', name: { ru: 'Декларация VAT UE', pl: 'Deklaracja VAT UE', ua: 'Декларація VAT UE' }, price: 100, qty: true },
+                { id: 'exchange', name: { ru: 'Расчёт курсовых разниц (за 1 док.)', pl: 'Różnice kursowe (za 1 dok.)', ua: 'Розрахунок курсових різниць (за 1 док.)' }, price: 15, qty: true },
+                { id: 'correction', name: { ru: 'Корректировка по вине клиента', pl: 'Korekta z winy klienta', ua: 'Коригування з вини клієнта' }, price: 150, qty: true, from: true },
+                { id: 'vat_reg', name: { ru: 'Регистрация плательщика НДС', pl: 'Rejestracja VAT', ua: 'Реєстрація платника ПДВ' }, price: 400 },
+                { id: 'vat_other', name: { ru: 'Декларация VAT-UE / VAT 9M / VAT 8', pl: 'Deklaracja VAT-UE / VAT 9M / VAT 8', ua: 'Декларація VAT-UE / VAT 9M / VAT 8' }, price: 100, qty: true },
+            ],
+            sect_payroll: [
+                { id: 'salary_calc', name: { ru: 'Расчёт зарплаты с ZUS (за сотр.)', pl: 'Naliczanie wynagrodzenia z ZUS (za os.)', ua: 'Розрахунок зарплати з ZUS (за особу)' }, price: 50, qty: true },
+                { id: 'zus_dra', name: { ru: 'ZUS DRA для ведущего деятельность', pl: 'ZUS DRA dla właściciela', ua: 'ZUS DRA для власника' }, price: 50, qty: true },
+                { id: 'zus_change', name: { ru: 'Изменение взноса ZUS', pl: 'Zmiana składki ZUS', ua: 'Зміна внеску ZUS' }, price: 100, qty: true },
+                { id: 'zus_reg', name: { ru: 'Регистрация / обновление в ZUS', pl: 'Zgłoszenie / aktualizacja w ZUS', ua: 'Реєстрація / оновлення в ZUS' }, price: 30, qty: true },
+                { id: 'zpa_zfa', name: { ru: 'Подготовка ZPA, ZFA', pl: 'Przygotowanie ZPA, ZFA', ua: 'Підготовка ZPA, ZFA' }, price: 100, qty: true },
+                { id: 'pit_annual', name: { ru: 'Годовая декларация PIT-11, PIT-4R и т.д.', pl: 'Roczne deklaracje PIT-11, PIT-4R itp.', ua: 'Річна декларація PIT-11, PIT-4R тощо' }, price: 70, qty: true },
+                { id: 'payroll_correction', name: { ru: 'Корректировка зарплаты по вине заказчика', pl: 'Korekta wynagrodzenia z winy zleceniodawcy', ua: 'Коригування зарплати з вини замовника' }, price: 100, qty: true },
+            ],
+            sect_hr: [
+                { id: 'emp_contract', name: { ru: 'Работник — трудовой договор (за чел.)', pl: 'Pracownik — umowa o pracę (za os.)', ua: 'Працівник — трудовий договір (за особу)' }, price: 80, qty: true },
+                { id: 'emp_zlecenie', name: { ru: 'Работник — договор поручения (за чел.)', pl: 'Pracownik — umowa zlecenie (za os.)', ua: 'Працівник — договір доручення (за особу)' }, price: 50, qty: true },
+                { id: 'prep_zlecenie', name: { ru: 'Подготовка договора поручения / подряда', pl: 'Przygotowanie umowy zlecenie / o dzieło', ua: 'Підготовка договору доручення / підряду' }, price: 50, qty: true },
+                { id: 'prep_contract', name: { ru: 'Подготовка трудового договора', pl: 'Przygotowanie umowy o pracę', ua: 'Підготовка трудового договору' }, price: 90, qty: true },
+                { id: 'fixed_assets', name: { ru: 'Учёт основных средств (за каждое ОС)', pl: 'Ewidencja środków trwałych (za szt.)', ua: 'Облік основних засобів (за кожний ОЗ)' }, price: 50, qty: true },
+            ],
+            sect_foreign: [
+                { id: 'appendix1', name: { ru: 'Приложение №1 к карте пребывания', pl: 'Załącznik nr 1 do karty pobytu', ua: 'Додаток №1 до карти перебування' }, price: 100, qty: true },
+                { id: 'psz_ppwpu', name: { ru: 'Уведомление PSZ-PPWPU (гражданин Украины)', pl: 'Powiadomienie PSZ-PPWPU (obywatel Ukrainy)', ua: 'Повідомлення PSZ-PPWPU (громадянин України)' }, price: 100, qty: true },
+                { id: 'work_statement', name: { ru: 'Заявление — работа иностранца', pl: 'Oświadczenie — praca cudzoziemca', ua: 'Заява — робота іноземця' }, price: 150, qty: true },
+                { id: 'seasonal_permit', name: { ru: 'Разрешение на сезонную работу', pl: 'Zezwolenie na pracę sezonową', ua: 'Дозвіл на сезонну роботу' }, price: 150, qty: true },
+                { id: 'work_permit', name: { ru: 'Разрешение на работу иностранца', pl: 'Zezwolenie na pracę cudzoziemca', ua: 'Дозвіл на роботу іноземця' }, price: 250, qty: true },
+                { id: 'temp_card_docs', name: { ru: 'Карта временного пребывания (документы)', pl: 'Karta pobytu (dokumenty)', ua: 'Карта тимчасового перебування (документи)' }, price: 500, qty: true },
+                { id: 'temp_card_full', name: { ru: 'Карта вр. пребывания (документы + ведение)', pl: 'Karta pobytu (dokumenty + prowadzenie)', ua: 'Карта тимч. перебування (документи + ведення)' }, price: 1000, qty: true },
+                { id: 'a1', name: { ru: 'Подготовка A1 для командировки', pl: 'Przygotowanie A1 na delegację', ua: 'Підготовка A1 для відрядження' }, price: 100, qty: true },
+                { id: 'ekuz', name: { ru: 'EKUZ', pl: 'EKUZ', ua: 'EKUZ' }, price: 100, qty: true },
+                { id: 'driver_cert', name: { ru: 'Свидетельство водителя', pl: 'Świadectwo kierowcy', ua: 'Свідоцтво водія' }, price: 200, qty: true },
+                { id: 'country_permit', name: { ru: 'Разрешение на страны', pl: 'Zezwolenie na kraje', ua: 'Дозвіл на країни' }, price: 150, qty: true },
+            ],
+            sect_extra: [
+                { id: 'invoice_issue', name: { ru: 'Выставление счёта-фактуры за клиента', pl: 'Wystawienie faktury za klienta', ua: 'Виставлення рахунку-фактури за клієнта' }, price: 30, qty: true },
+                { id: 'income_cert', name: { ru: 'Справка о доходах (за 1 док.)', pl: 'Zaświadczenie o dochodach (za 1 dok.)', ua: 'Довідка про доходи (за 1 док.)' }, price: 30, qty: true },
+                { id: 'ceidg', name: { ru: 'Документы для CEIDG', pl: 'Dokumenty do CEIDG', ua: 'Документи для CEIDG' }, price: 100, from: true },
+                { id: 'other_tax', name: { ru: 'Другие налоговые декларации', pl: 'Inne deklaracje podatkowe', ua: 'Інші податкові декларації' }, price: 100, from: true },
+                { id: 'audit_hour', name: { ru: 'Контрольное / проверочное производство (час)', pl: 'Postępowanie kontrolne (za godz.)', ua: 'Контрольне / перевірне провадження (год.)' }, price: 150, qty: true, suffix: 'plus_costs' },
+                { id: 'letter', name: { ru: 'Написание писем (за 1 док.)', pl: 'Pisanie pism (za 1 dok.)', ua: 'Написання листів (за 1 док.)' }, price: 100, qty: true, from: true },
+                { id: 'handover', name: { ru: 'Акт приёма-передачи документации', pl: 'Protokół zdawczo-odbiorczy', ua: 'Акт прийому-передачі документації' }, price: 50 },
+                { id: 'notices', name: { ru: 'Бухгалтерские уведомления (за шт.)', pl: 'Noty księgowe (za szt.)', ua: 'Бухгалтерські повідомлення (за шт.)' }, price: 30, qty: true, suffix: 'plus_postage' },
+            ]
+        }
+    },
+    sp: {
+        packages: [
+            { key: 'opt_10r', price: 450 },
+            { key: 'opt_20r', price: 600 },
+            { key: 'opt_30r', price: 700 },
+            { key: 'opt_50r', price: 900 },
+        ],
+        extraInvoice: 11,
+        sections: {
+            sect_vat: [
+                { id: 'vat_jpk', name: { ru: 'Декларация VAT JPK', pl: 'Deklaracja VAT JPK', ua: 'Декларація VAT JPK' }, price: 100, qty: true },
+                { id: 'vat_ue', name: { ru: 'Информация VAT UE', pl: 'Informacja VAT UE', ua: 'Інформація VAT UE' }, price: 100, qty: true },
+                { id: 'exchange', name: { ru: 'Расчёт курсовых разниц', pl: 'Różnice kursowe', ua: 'Розрахунок курсових різниць' }, price: 15, qty: true },
+                { id: 'annual_report', name: { ru: 'Годовая финансовая отчётность', pl: 'Roczne sprawozdanie finansowe', ua: 'Річна фінансова звітність' }, price: 1500 },
+                { id: 'correction', name: { ru: 'Корректировка по вине клиента', pl: 'Korekta z winy klienta', ua: 'Коригування з вини клієнта' }, price: 200, qty: true, from: true },
+                { id: 'vat_reg', name: { ru: 'Регистрация плательщика НДС', pl: 'Rejestracja VAT', ua: 'Реєстрація платника ПДВ' }, price: 400 },
+                { id: 'vat_other', name: { ru: 'Декларация VAT-UE / VAT 9M / VAT 8', pl: 'Deklaracja VAT-UE / VAT 9M / VAT 8', ua: 'Декларація VAT-UE / VAT 9M / VAT 8' }, price: 100, qty: true },
+            ],
+            sect_payroll: [
+                { id: 'zus_dra', name: { ru: 'ZUS DRA для ведущего деятельность', pl: 'ZUS DRA dla właściciela', ua: 'ZUS DRA для власника' }, price: 50, qty: true },
+                { id: 'zus_change', name: { ru: 'Изменение взноса ZUS', pl: 'Zmiana składki ZUS', ua: 'Зміна внеску ZUS' }, price: 100, qty: true },
+                { id: 'zpa_zfa', name: { ru: 'Подготовка ZPA, ZFA', pl: 'Przygotowanie ZPA, ZFA', ua: 'Підготовка ZPA, ZFA' }, price: 100, qty: true },
+                { id: 'pit_annual', name: { ru: 'Годовая декларация PIT-11, PIT-4R и т.д.', pl: 'Roczne deklaracje PIT-11, PIT-4R itp.', ua: 'Річна декларація PIT-11, PIT-4R тощо' }, price: 70, qty: true },
+                { id: 'payroll_correction', name: { ru: 'Корректировка зарплаты по вине заказчика', pl: 'Korekta wynagrodzenia z winy zleceniodawcy', ua: 'Коригування зарплати з вини замовника' }, price: 100, qty: true },
+            ],
+            sect_hr: [
+                { id: 'emp_contract', name: { ru: 'Работник — трудовой договор (за чел.)', pl: 'Pracownik — umowa o pracę (za os.)', ua: 'Працівник — трудовий договір (за особу)' }, price: 80, qty: true },
+                { id: 'emp_zlecenie', name: { ru: 'Работник — договор поручения (за чел.)', pl: 'Pracownik — umowa zlecenie (za os.)', ua: 'Працівник — договір доручення (за особу)' }, price: 50, qty: true },
+                { id: 'prep_zlecenie', name: { ru: 'Подготовка договора поручения / подряда', pl: 'Przygotowanie umowy zlecenie / o dzieło', ua: 'Підготовка договору доручення / підряду' }, price: 50, qty: true },
+                { id: 'prep_contract', name: { ru: 'Подготовка трудового договора', pl: 'Przygotowanie umowy o pracę', ua: 'Підготовка трудового договору' }, price: 90, qty: true },
+                { id: 'warehouse', name: { ru: 'Ведение склада (до 10 арт. + по 7 zł)', pl: 'Prowadzenie magazynu (do 10 art. + 7 zł)', ua: 'Ведення складу (до 10 арт. + по 7 zł)' }, price: 100 },
+            ],
+            sect_foreign: [
+                { id: 'appendix1', name: { ru: 'Приложение №1 к карте пребывания', pl: 'Załącznik nr 1 do karty pobytu', ua: 'Додаток №1 до карти перебування' }, price: 100, qty: true },
+                { id: 'psz_ppwpu', name: { ru: 'Уведомление PSZ-PPWPU (гражданин Украины)', pl: 'Powiadomienie PSZ-PPWPU (obywatel Ukrainy)', ua: 'Повідомлення PSZ-PPWPU (громадянин України)' }, price: 100, qty: true },
+                { id: 'work_statement', name: { ru: 'Заявление — работа иностранца', pl: 'Oświadczenie — praca cudzoziemca', ua: 'Заява — робота іноземця' }, price: 150, qty: true },
+                { id: 'seasonal_permit', name: { ru: 'Разрешение на сезонную работу', pl: 'Zezwolenie na pracę sezonową', ua: 'Дозвіл на сезонну роботу' }, price: 150, qty: true },
+                { id: 'work_permit', name: { ru: 'Разрешение на работу иностранца', pl: 'Zezwolenie na pracę cudzoziemca', ua: 'Дозвіл на роботу іноземця' }, price: 250, qty: true },
+                { id: 'temp_card_docs', name: { ru: 'Карта временного пребывания (документы)', pl: 'Karta pobytu (dokumenty)', ua: 'Карта тимчасового перебування (документи)' }, price: 500, qty: true },
+                { id: 'temp_card_full', name: { ru: 'Карта вр. пребывания (документы + ведение)', pl: 'Karta pobytu (dokumenty + prowadzenie)', ua: 'Карта тимч. перебування (документи + ведення)' }, price: 1000, qty: true },
+                { id: 'a1', name: { ru: 'Подготовка A1 для командировки', pl: 'Przygotowanie A1 na delegację', ua: 'Підготовка A1 для відрядження' }, price: 100, qty: true },
+                { id: 'ekuz', name: { ru: 'EKUZ', pl: 'EKUZ', ua: 'EKUZ' }, price: 100, qty: true },
+                { id: 'driver_cert', name: { ru: 'Свидетельство водителя', pl: 'Świadectwo kierowcy', ua: 'Свідоцтво водія' }, price: 200, qty: true },
+                { id: 'country_permit', name: { ru: 'Разрешение на страны', pl: 'Zezwolenie na kraje', ua: 'Дозвіл на країни' }, price: 150, qty: true },
+            ],
+            sect_extra: [
+                { id: 'invoice_issue', name: { ru: 'Выставление счёта-фактуры за клиента', pl: 'Wystawienie faktury za klienta', ua: 'Виставлення рахунку-фактури за клієнта' }, price: 30, qty: true },
+                { id: 'income_cert', name: { ru: 'Справка о доходах (за 1 док.)', pl: 'Zaświadczenie o dochodach (za 1 dok.)', ua: 'Довідка про доходи (за 1 док.)' }, price: 30, qty: true },
+                { id: 'krs', name: { ru: 'Документы для KRS', pl: 'Dokumenty do KRS', ua: 'Документи для KRS' }, price: 500, from: true },
+                { id: 'other_tax', name: { ru: 'Другие декларации / отчёты GUS', pl: 'Inne deklaracje / sprawozdania GUS', ua: 'Інші декларації / звіти GUS' }, price: 100 },
+                { id: 'audit_hour', name: { ru: 'Контрольное производство (час)', pl: 'Postępowanie kontrolne (za godz.)', ua: 'Контрольне провадження (год.)' }, price: 150, qty: true, suffix: 'plus_costs' },
+                { id: 'letter', name: { ru: 'Написание писем (за 1 док.)', pl: 'Pisanie pism (za 1 dok.)', ua: 'Написання листів (за 1 док.)' }, price: 100, qty: true, from: true },
+                { id: 'handover', name: { ru: 'Акт приёма-передачи документации', pl: 'Protokół zdawczo-odbiorczy', ua: 'Акт прийому-передачі документації' }, price: 50 },
+            ]
+        }
+    }
+};
+
+// ===== STATE =====
+let currentLang = 'ru';
+let currentType = 'jdg';
+let selectedPackage = -1;
+let extraInvoices = 0;
+let serviceState = {}; // { id: { checked: bool, qty: number } }
+
+// ===== INIT =====
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+    tg.expand();
+    tg.ready();
+}
+
+function t(key) {
+    return i18n[currentLang][key] || key;
+}
+
+function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    render();
+}
+
+function setType(type) {
+    currentType = type;
+    selectedPackage = -1;
+    extraInvoices = 0;
+    serviceState = {};
+    document.getElementById('type-jdg').classList.toggle('active', type === 'jdg');
+    document.getElementById('type-sp').classList.toggle('active', type === 'sp');
+    render();
+}
+
+function render() {
+    // Update static i18n
+    document.getElementById('headerSubtitle').textContent = t('subtitle');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+    });
+
+    const data = prices[currentType];
+    const container = document.getElementById('calculator');
+    let html = '';
+
+    // Package selector
+    html += `<div class="section fade-in">
+        <div class="section-title">${t('sect_bookkeeping')}</div>
+        <div class="card">
+            <div class="select-wrapper">
+                <div class="select-label">${t('invoices_label')}</div>
+                <select class="invoice-select" onchange="selectPackage(this.value)">
+                    <option value="-1">—</option>`;
+    data.packages.forEach((p, i) => {
+        html += `<option value="${i}" ${selectedPackage === i ? 'selected' : ''}>${t(p.key)} — ${p.price} PLN</option>`;
+    });
+    html += `</select>`;
+    if (selectedPackage >= 0) {
+        html += `<div class="select-price">${data.packages[selectedPackage].price} PLN</div>`;
+    }
+    html += `</div>
+            <div class="extra-input-row ${selectedPackage >= 0 ? 'visible' : ''}">
+                <label>${t('extra_invoices')}</label>
+                <input type="number" class="extra-input" min="0" value="${extraInvoices}" onchange="setExtra(this.value)" oninput="setExtra(this.value)">
+                <span style="font-size:12px;color:var(--td-text-secondary)">× ${data.extraInvoice} PLN</span>
+                ${extraInvoices > 0 ? `<span style="font-weight:700;color:var(--td-gold);margin-left:auto">${extraInvoices * data.extraInvoice} PLN</span>` : ''}
+            </div>
+        </div>
+    </div>`;
+
+    // Service sections
+    const sectionKeys = Object.keys(data.sections);
+    sectionKeys.forEach(sKey => {
+        const services = data.sections[sKey];
+        html += `<div class="section fade-in">
+            <div class="section-title">${t(sKey)}</div>
+            <div class="card">`;
+        services.forEach(s => {
+            const st = serviceState[s.id] || { checked: false, qty: 1 };
+            const isChecked = st.checked;
+            const qty = st.qty || 1;
+            const itemTotal = isChecked ? s.price * qty : 0;
+            const priceLabel = (s.from ? t('from') + ' ' : '') + s.price + ' PLN' + (s.suffix ? ' ' + t(s.suffix) : '');
+
+            html += `<div class="service-item" onclick="toggleService('${s.id}', event)">
+                <div class="service-check ${isChecked ? 'checked' : ''}"></div>
+                <div class="service-info">
+                    <div class="service-name">${s.name[currentLang]}</div>
+                    <div class="service-price-tag">${priceLabel}</div>
+                </div>`;
+            if (s.qty && isChecked) {
+                html += `<div class="service-controls" onclick="event.stopPropagation()">
+                    <button class="qty-btn" onclick="changeQty('${s.id}', -1)">−</button>
+                    <div class="qty-value">${qty}</div>
+                    <button class="qty-btn" onclick="changeQty('${s.id}', 1)">+</button>
+                </div>`;
+            }
+            if (isChecked) {
+                html += `<div class="service-total">${itemTotal} zł</div>`;
+            }
+            html += `</div>`;
+        });
+        html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+    updateTotal();
+}
+
+function selectPackage(val) {
+    selectedPackage = parseInt(val);
+    if (selectedPackage < 0) extraInvoices = 0;
+    render();
+}
+
+function setExtra(val) {
+    extraInvoices = Math.max(0, parseInt(val) || 0);
+    updateTotal();
+    // Update extra display
+    const row = document.querySelector('.extra-input-row');
+    if (row) {
+        const spans = row.querySelectorAll('span');
+        if (spans.length > 1 && extraInvoices > 0) {
+            // re-render to update
+            render();
+        }
+    }
+}
+
+function toggleService(id, e) {
+    if (e && (e.target.closest('.service-controls') || e.target.closest('.qty-btn'))) return;
+    if (!serviceState[id]) serviceState[id] = { checked: false, qty: 1 };
+    serviceState[id].checked = !serviceState[id].checked;
+    if (!serviceState[id].checked) serviceState[id].qty = 1;
+    render();
+}
+
+function changeQty(id, delta) {
+    if (!serviceState[id]) serviceState[id] = { checked: true, qty: 1 };
+    serviceState[id].qty = Math.max(1, serviceState[id].qty + delta);
+    render();
+}
+
+function calcTotal() {
+    const data = prices[currentType];
+    let total = 0;
+    let count = 0;
+
+    // Package
+    if (selectedPackage >= 0) {
+        total += data.packages[selectedPackage].price;
+        count++;
+    }
+    // Extra
+    total += extraInvoices * data.extraInvoice;
+
+    // Services
+    Object.keys(data.sections).forEach(sKey => {
+        data.sections[sKey].forEach(s => {
+            const st = serviceState[s.id];
+            if (st && st.checked) {
+                total += s.price * (st.qty || 1);
+                count++;
+            }
+        });
+    });
+
+    return { total, count };
+}
+
+function updateTotal() {
+    const { total, count } = calcTotal();
+    document.getElementById('totalAmount').innerHTML = `${total.toLocaleString('pl-PL')} <span>PLN</span>`;
+    const itemsEl = document.getElementById('itemsCount');
+    if (count > 0) {
+        itemsEl.textContent = `${count} ${t('items_selected')}`;
+    } else {
+        itemsEl.textContent = t('no_services');
+    }
+    document.getElementById('btnSend').disabled = count === 0;
+}
+
+function sendResult() {
+    const { total, count } = calcTotal();
+    if (count === 0) return;
+
+    const data = prices[currentType];
+    let lines = [];
+    lines.push(t('sent_title'));
+    lines.push(currentType === 'jdg' ? t('sent_type_jdg') : t('sent_type_sp'));
+    lines.push('');
+
+    if (selectedPackage >= 0) {
+        const pkg = data.packages[selectedPackage];
+        lines.push(`📒 ${t(pkg.key)}: ${pkg.price} PLN`);
+        if (extraInvoices > 0) {
+            lines.push(`   + ${extraInvoices} × ${data.extraInvoice} PLN = ${extraInvoices * data.extraInvoice} PLN`);
+        }
+    }
+
+    Object.keys(data.sections).forEach(sKey => {
+        const sectionServices = data.sections[sKey].filter(s => {
+            const st = serviceState[s.id];
+            return st && st.checked;
+        });
+        if (sectionServices.length > 0) {
+            lines.push('');
+            lines.push(`📌 ${t(sKey)}:`);
+            sectionServices.forEach(s => {
+                const st = serviceState[s.id];
+                const qty = st.qty || 1;
+                const lineTotal = s.price * qty;
+                if (qty > 1) {
+                    lines.push(`  • ${s.name[currentLang]} ×${qty} = ${lineTotal} PLN`);
+                } else {
+                    lines.push(`  • ${s.name[currentLang]}: ${lineTotal} PLN`);
+                }
+            });
+        }
+    });
+
+    lines.push('');
+    lines.push(`💰 ${t('total_label')}: ${total.toLocaleString('pl-PL')} PLN`);
+
+    const text = lines.join('\n');
+
+    if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify({ text, total, count, type: currentType, lang: currentLang }));
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Скопировано в буфер обмена!\nCopied to clipboard!');
+        });
+    }
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
